@@ -340,7 +340,7 @@ int getProcessCount( PCB* processControlBlock )
   Process_node* runningNode = processControlBlock->processQueueHead;
   int count = 0;
 
-  // Loop until we reach the final process, counting each 
+  // Loop until we reach the final process, counting each
   while( runningNode != NULL )
     {
 
@@ -382,6 +382,7 @@ Process_node* copyProcess( Process_node* sourceNode )
   nodeCopy->currCode = sourceNode->currCode;
   nodeCopy->state = sourceNode->state;
   nodeCopy->processID = sourceNode->processID;
+  nodeCopy->next = NULL;
 
   // return the copy of the sourceNode
   return nodeCopy;
