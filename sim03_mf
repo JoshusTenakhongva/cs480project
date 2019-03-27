@@ -1,0 +1,28 @@
+CC = gcc
+DEBUG = -g
+CFLAGS = -Wall -std=c99 -pedantic -c $(DEBUG)
+LFLAGS = -Wall -std=c99 -pedantic $(DEBUG)
+
+sim03: Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o
+	$(CC) $(LFLAGS) Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o -o sim03
+
+Sim03Main.o: Sim03Main.c
+	$(CC) $(CFLAGS) Sim03Main.c -lpthread
+
+MetaDataAccess.o: MetaDataAccess.c MetaDataAccess.h
+	$(CC) $(CFLAGS) MetaDataAccess.c
+
+ConfigAccess.o: ConfigAccess.c ConfigAccess.h 
+	$(CC) $(CFLAGS) ConfigAccess.c 
+	
+StringUtils.o: StringUtils.c StringUtils.h
+	$(CC) $(CFLAGS) StringUtils.c 
+
+ProcessControlBlock.o: ProcessControlBlock.c ProcessControlBlock.h
+	$(CC) $(CFLAGS) ProcessControlBlock.c
+
+simtimer.o: simtimer.c simtimer.h
+	$(CC) $(CFLAGS) simtimer.c
+
+clean: 
+	\rm *.o *.*- sim03
