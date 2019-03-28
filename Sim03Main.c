@@ -6,6 +6,7 @@
 #include "ConfigAccess.h"
 #include "MetaDataAccess.h"
 #include "simtimer.h"
+#include "MemoryManagement.h"
 
 /*
 Function name: main
@@ -31,6 +32,8 @@ int main( int argc, char** argv )
 
   // initialize function/variables for the Process Control Block
   PCB* processControlBlock = ( PCB* ) malloc( sizeof( PCB ) );
+  Memory_management_unit* mmu = ( Memory_management_unit* )
+                                      malloc( sizeof( Memory_management_unit));
   Output_list* outputList = ( Output_list* ) malloc( sizeof( Output_list ) );
   int outputCode;
   Process_node* BEFORE_PROCESSING = ( Process_node* )

@@ -6,6 +6,7 @@
 #include "simtimer.h"
 #include <math.h>
 #include <pthread.h>
+#include "MemoryManagement.h"
 
 /****************************************************
 *       Table of Contents
@@ -135,8 +136,15 @@ void initializeProcessesHelper( PCB* processControlBlock, int processID,
         // If it's an end A code, we handle it elsewhere
         break;
 
-
+      // Check if the opCode is a memory operation
   		case 'M':
+        if( currentProcess->startCode == NULL )
+          {
+
+          currentProcess->startCode = runningOpCode;
+          }
+        break;
+
       // Check if the opCode is processing
   		case 'P':
 
@@ -222,12 +230,6 @@ void opCode_A_end( Process_node* currProcess, OpCodeType* opCode )
   // Reset the opCode pointer, so processing can begin at the start of the codes
   currProcess->currCode = currProcess->startCode;
 
-  }
-
-void incrementCurrentOpCode( Process_node* process )
-  {
-
-  process->currCode = process->currCode->next;
   }
 
 void setProcessesToReady( Process_node* runningProcess )
@@ -453,7 +455,7 @@ void runFCFS( PCB* processControlBlock, Output_list* outputList,
      // function: outputOS
     outputOS( currProc, outputList, EMPTY_STRING, outputCode );
 
-    // Loop through the opCodes of this process
+    // Loop through the opCodes of this process recursively
     runOpCodes( currProc, outputList, outputCode );
 
     // Set the current processes state as terminated
@@ -493,6 +495,15 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
   // Check if the current opCode is not the ending of the process
   if( compareString( currOpCode->opName, "end") != STR_EQ)
     {
+
+    // Check if the opcode is a memory unit
+
+
+
+
+
+
+    // otherwise, act as any other opCode
 
     // Print that this opCode has started
      // function: outputProcess
@@ -548,6 +559,12 @@ void spinOpCode( OpCodeType* opCode, double spinTime, Process_node* currProc )
     currProc->state = TERMINATED;
     }
 
+  }
+
+void incrementCurrentOpCode( Process_node* process )
+  {
+
+  process->currCode = process->currCode->next;
   }
 
 /*
@@ -758,7 +775,6 @@ void outputProcess( Process_node* process, int outputCode,
   just easily concatenate the entire string at once and put everything in it.
   */
 
-
   accessTimer( LAP_TIMER, time );
 
   // Create the string that holds the process and its number
@@ -773,16 +789,20 @@ void outputProcess( Process_node* process, int outputCode,
   // Because my SPACE constant doesn't want to work
   concatenateString( outputString, " " );
 
-  // Create the second half with the process number and opCode information
+  //printf( "opName: %s", currentOpCode->opName );
 
+  // Create the second half with the process number and opCode information
   concatenateString( outputString, currentOpCode->opName );
 
   // Switch statement checking the opLetter
   switch( currentOpCode->opLtr )
     {
 
-    case 'P':
     case 'M':
+      concatenateString( outputString, " memory operation " );
+      break;
+
+    case 'P':
       concatenateString( outputString, " operation " );
       break;
 

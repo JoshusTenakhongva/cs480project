@@ -15,7 +15,6 @@ typedef enum { EMPTY = 101,
                TERMINATED,
              } processStates;
 
-// comments
 
 typedef struct Process_node
   {
