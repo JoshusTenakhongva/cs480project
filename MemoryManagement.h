@@ -7,25 +7,30 @@
 
 // global constants
 
-typedef struct Memory_unit
+typedef struct Memory_address
   {
 
   int memoryID;
   int memoryBase;
   int memoryOffset;
-	Process_node* accessProcesses; 
 
-  struct Memory_unit* next;
-} Memory_unit; 
+  struct Memory_address* next;
+	
+	int processesWithAccess[]; 
+} Memory_address; 
 
 typedef struct Memory_management_unit
   {
 
   //
-  Memory_unit* head;
-  Memory_unit* currentUnit;
+  Memory_address* head;
+  Memory_address* currentUnit;
 
   } Memory_management_unit;
+
+/* functions */ 
+Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode );
+void separateMemoryAddress( Memory_address* memoryUnit, OpCodeType* opCode );
 
 
 

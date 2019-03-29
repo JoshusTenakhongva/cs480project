@@ -404,7 +404,7 @@ Process_node* copyProcess( Process_node* sourceNode )
 *   The simulation of the processes being run will be completed.
 */
 void runProcesses( PCB* processControlBlock, Output_list* outputList,
-                                      int outputCode, ConfigDataType* cfgData )
+        int outputCode, ConfigDataType* cfgData, Memory_management_unit* mmu )
   {
 
   // Set the process that is currently being worked on as the first on the queue
@@ -419,7 +419,7 @@ void runProcesses( PCB* processControlBlock, Output_list* outputList,
     case CPU_SCHED_FCFS_N_CODE:
     // FCFS-N is the default cpu scheduling order
     default:
-      runFCFS( processControlBlock, outputList, outputCode );
+      runFCFS( processControlBlock, outputList, outputCode, mmu );
       break;
     }
   }
@@ -438,7 +438,7 @@ void runProcesses( PCB* processControlBlock, Output_list* outputList,
 *
 */
 void runFCFS( PCB* processControlBlock, Output_list* outputList,
-                                                              int outputCode )
+                                int outputCode, Memory_management_unit* mmu )
   {
 
   // Initialize variables
@@ -456,7 +456,7 @@ void runFCFS( PCB* processControlBlock, Output_list* outputList,
     outputOS( currProc, outputList, EMPTY_STRING, outputCode );
 
     // Loop through the opCodes of this process recursively
-    runOpCodes( currProc, outputList, outputCode );
+    runOpCodes( currProc, outputList, outputCode, mmu );
 
     // Set the current processes state as terminated
     currProc->state = TERMINATED;
@@ -468,7 +468,7 @@ void runFCFS( PCB* processControlBlock, Output_list* outputList,
       printf( "\n" );
       }
 
-    if( checkOutputFile( outputCode ) )
+    if( checkOutputFile( outputCode ))
       {
 
       addOutputNode( outputList, "\n" );
@@ -480,14 +480,14 @@ void runFCFS( PCB* processControlBlock, Output_list* outputList,
     // set the next process as the current process
     incrementCurrentProcess( processControlBlock );
 
-    runFCFS( processControlBlock, outputList, outputCode );
+    runFCFS( processControlBlock, outputList, outputCode, mmu );
     }
 
   // end loop
   }
 
 void runOpCodes( Process_node* currProc, Output_list* outputList,
-                                                              int outputCode )
+                                int outputCode, Memory_management_unit* mmu )
   {
 
   OpCodeType* currOpCode = currProc->currCode;
@@ -497,10 +497,6 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
     {
 
     // Check if the opcode is a memory unit
-
-
-
-
 
 
     // otherwise, act as any other opCode
@@ -521,7 +517,7 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
     incrementCurrentOpCode( currProc );
 
     // recurse to the next opCode
-    runOpCodes( currProc, outputList, outputCode );
+    runOpCodes( currProc, outputList, outputCode, mmu );
     }
 
   // Otherwise, end the recursion
@@ -708,7 +704,7 @@ void outputOS( Process_node* process, Output_list* outputList, char string[],
 
     concatenateString( outputString, processNumber );
 
-    concatenateString( outputString, " ended and set in EXIT state\n" );
+    concatenateString( outputString, " ended and set in EXIT state" );
 
     }
 
@@ -876,11 +872,11 @@ void initializeOutputList( Output_list* outputList,
 
   // Create a string_node with the line of =
    // function: createNewNode
-   addOutputNode( outputList, "======================\n" );
+  addOutputNode( outputList, "======================" );
 
   // Create a string_node with the "Simulator Log File Header"
    // function: createNewNode
-  addOutputNode( outputList, "Simulator Log File Header\n" );
+  addOutputNode( outputList, "Simulator Log File Header" );
 
   // Add a blank line
    // function: createNewNode
@@ -896,7 +892,7 @@ void initializeOutputList( Output_list* outputList,
       // check case metaData code
        // function: createNewNode
       case CFG_MD_FILE_NAME_CODE:
-        copyString( outputString,"File Name:                       : " );
+        copyString( outputString, "File Name                       : " );
 
         concatenateString( outputString, configDataPtr->metaDataFileName);
 
@@ -940,6 +936,8 @@ void initializeOutputList( Output_list* outputList,
       case CFG_QUANT_CYCLES_CODE:
         copyString( outputString, "Quantum Cycles                  : " );
 
+        sprintf( infoString, "%d", configDataPtr->quantumCycles );
+
         concatenateString( outputString, infoString );
         break;
 
@@ -947,18 +945,30 @@ void initializeOutputList( Output_list* outputList,
        // function: createNewNode
       case CFG_MEM_AVAILABLE_CODE:
         copyString( outputString, "Memory Available (KB)           : " );
+
+        sprintf( infoString, "%d", configDataPtr->memAvailable );
+
+        concatenateString( outputString, infoString );
         break;
 
       // check case Processor Cycle Rate
        // function: createNewNode
       case CFG_PROC_CYCLES_CODE:
         copyString( outputString, "Processor Cycle Rate (ms/cycle) : " );
+
+        sprintf( infoString, "%d", configDataPtr->procCycleRate );
+
+        concatenateString( outputString, infoString );
         break;
 
       // check case IO cycle rate
        // function: createNewNode
       case CFG_IO_CYCLES_CODE:
         copyString( outputString, "I/O Cycle Rate (ms/cycle)       : " );
+
+        sprintf( infoString, "%d", configDataPtr->ioCycleRate );
+
+        concatenateString( outputString, infoString );
         break;
 
       // default case end the loop
@@ -968,17 +978,15 @@ void initializeOutputList( Output_list* outputList,
     // Add the string we created to the output list
     addOutputNode( outputList, outputString );
     }
-
-   // End loop
-
-  // Add a blank line
-   // function: createNewNode
+  // End loop
 
   // Add = line
    // function: createNewNode
+  addOutputNode( outputList, "==================" );
 
   // Add "Begin Simulation" line
    // function: createNewNode
+  addOutputNode( outputList, "Begin Simulation\n" );
   }
 
 /*
@@ -1036,38 +1044,65 @@ void addOutputNode( Output_list* outputList, char info[] )
   {
 
   // Create a new node while saving the info to the new node
+  String_node* outputNode = ( String_node* ) malloc( sizeof( String_node ));
 
-  // update the tail
+  // Save the string information
+  copyString( outputNode->string, info );
 
-  // Have the current tail of the outputList point to the new node as its next
+  // Check if this node is the first
+  if ( outputList->head == NULL )
+    {
 
-  // Change the outputList's tail to point to the newNode
+    // Set the new node as the head and the tail of the outputList
+    outputList->head = outputNode;
+    outputList->tail = outputNode;
+    }
 
+  // Otherwise, assume this isn't the first node
+  else
+    {
+
+    // Have the current tail point to our new node as its next
+    outputList->tail->next = outputNode;
+
+    // update the tail
+    outputList->tail = outputNode;
+
+    }
+
+  // Set the new tail to point to null
+  outputList->tail->next = NULL;
   }
 
 
-void saveToFile( String_node* runningNode, char fileName[] )
+void saveToFile( Output_list* outputList, char fileName[] )
   {
 
   // Create a file to write to
+  FILE* filePointer = fopen( fileName, "w" );
 
-  // Create a flag for when to end the loop
-
-  // Loop through the runningNodes
-
-    // Check if our running node is not null
-
-      // Save the node string to the file
-
-      // Go to next line
-
-      // Increment the node
-
-    // Otherwise, end the loop
+  // resurcse through the outputList and save the nodes to the file
+  saveToFileHelper( outputList->head, filePointer );
 
   // close the file
+  fclose( filePointer );
 
 	}
+
+void saveToFileHelper( String_node* runningNode, FILE* filePointer )
+  {
+
+  // Check if the running node is not null
+  if ( runningNode != NULL )
+    {
+
+    // Save the text to the filePointer
+    fprintf( filePointer, "%s\n", runningNode->string );
+
+    // Recurse to the next node
+    saveToFileHelper( runningNode->next, filePointer );
+    }
+  }
 
 /*******************************************************
 *   Methods for cleaning and freeing mallocs

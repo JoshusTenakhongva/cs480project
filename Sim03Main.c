@@ -35,11 +35,12 @@ int main( int argc, char** argv )
   Memory_management_unit* mmu = ( Memory_management_unit* )
                                       malloc( sizeof( Memory_management_unit));
   Output_list* outputList = ( Output_list* ) malloc( sizeof( Output_list ) );
+  outputList->head = NULL;
   int outputCode;
   Process_node* BEFORE_PROCESSING = ( Process_node* )
                                               malloc( sizeof( Process_node ) );
   *BEFORE_PROCESSING = ( Process_node ) { .state = EMPTY };
-  char fileName[ 100 ];
+  char fileName[ MAX_STR_LEN ];
 
   // initialize araibles for other things
   Boolean noErrors = True;
@@ -88,9 +89,6 @@ int main( int argc, char** argv )
       // Initialize the output linked list
        // function: initializeOutputList
       initializeOutputList( outputList, configDataPtr );
-
-      // Save the name of the file we will write to
-      copyString( fileName, configDataPtr->logToFileName );
       }
     }
 
@@ -226,7 +224,8 @@ int main( int argc, char** argv )
 
     // Run the simulation
      // function: runProcesses
-    runProcesses( processControlBlock, outputList, outputCode, configDataPtr );
+    runProcesses( processControlBlock, outputList, outputCode, configDataPtr,
+                                                                        mmu );
 
     // Print that the system has stopped
     outputOS( BEFORE_PROCESSING, outputList, "System stop", outputCode );
@@ -240,13 +239,16 @@ int main( int argc, char** argv )
       {
 
       // Save the end simulation to the outputfile
-      addOutputNode( outputList, "End Simulation - Complete" );
+      addOutputNode( outputList, "\nEnd Simulation - Complete" );
       addOutputNode( outputList, "=========================");
       }
 
+    // Save the name of the file we will write to
+    copyString( fileName, configDataPtr->logToFileName );
+
     // Write to the file
      // function: saveToFile
-    saveToFile( outputList->head, fileName );
+    saveToFile( outputList, fileName );
 
     /*
     shut down, clean up program

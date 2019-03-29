@@ -15,9 +15,10 @@
 *     checkMemoryAddress
 *     clearMemory
 *     throwSegFault
+*     clearMMU 
 */
 
-void allocateMemory( Memory_management_unit mmu, opCodeType opCode )
+Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode )
   {
 
   // Initialize variables
@@ -38,7 +39,7 @@ void allocateMemory( Memory_management_unit mmu, opCodeType opCode )
 
   }
 
-void separateMemoryAddress( Memory_unit memoryUnit, opCodeType opCode )
+void separateMemoryAddress( Memory_address* memoryUnit, OpCodeType* opCode )
   {
 
   /* Initialize variables */

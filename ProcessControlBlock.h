@@ -6,6 +6,7 @@
 #include "StringUtils.h"
 #include "MetaDataAccess.h"
 #include "ConfigAccess.h"
+#include "MemoryManagement.h"
 
 // global constants
 typedef enum { EMPTY = 101,
@@ -35,6 +36,8 @@ typedef struct PCB
   Process_node* processQueueHead;
   Process_node* currentProcess;
   Process_node* programCounter;
+	
+	Memory_management_unit* mmu; 
 
   } PCB;
 
@@ -69,11 +72,11 @@ void sortProcesses( PCB* processControlBlock );
 int getProcessCount( PCB* processControlBlock );
 Process_node* copyProcess( Process_node* sourceNode );
 void runProcesses( PCB* processControlBlock, Output_list* outputList,
-                                     int outputCode, ConfigDataType* cfgData );
+        int outputCode, ConfigDataType* cfgData, Memory_management_unit* mmu );
 void runFCFS( PCB* processControlBlock, Output_list* outputList,
-                                                             int outputCode );
+                                int outputCode, Memory_management_unit* mmu );
 void runOpCodes( Process_node* currProc, Output_list* outputList,
-                                                              int outputCode );
+                                int outputCode, Memory_management_unit* mmu );
 void spinOpCode( OpCodeType* opCode, double spinTime, Process_node* currProc );
 void incrementCurrentProcess( PCB* ProcessControlBlock );
 
@@ -87,14 +90,14 @@ void initializeOutputList( Output_list* outputList,
 Boolean checkOutputFile( int outputCode );
 Boolean checkOutputPrint( int outputCode );
 void addOutputNode( Output_list* outputList, char info[] );
-void saveToFile( String_node* runningNode, char fileName[] );
+void saveToFile( Output_list* outputList, char fileName[] );
+void saveToFileHelper( String_node* runningNode, FILE* filePointer );
 
 // Methods for cleaning and freeing mallocs
 void clearOutputList( String_node* runningNode );
 void clearProcessNodes( Process_node* runningNode );
 
 void* threadTimer( int code, char fileName[] );
-
 
 
 
