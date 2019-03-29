@@ -235,20 +235,21 @@ int main( int argc, char** argv )
     printf( "\nEnd Simulation - Complete\n" );
     printf( "=========================\n") ;
 
-    if( outputCode == LOGTO_BOTH_CODE || outputCode == LOGTO_FILE_CODE )
+
+    if( checkOutputFile( outputCode ) )
       {
 
       // Save the end simulation to the outputfile
       addOutputNode( outputList, "\nEnd Simulation - Complete" );
       addOutputNode( outputList, "=========================");
+
+      // Save the name of the file we will write to
+      copyString( fileName, configDataPtr->logToFileName );
+
+      // Write to the file
+       // function: saveToFile
+      saveToFile( outputList, fileName );
       }
-
-    // Save the name of the file we will write to
-    copyString( fileName, configDataPtr->logToFileName );
-
-    // Write to the file
-     // function: saveToFile
-    saveToFile( outputList, fileName );
 
     /*
     shut down, clean up program

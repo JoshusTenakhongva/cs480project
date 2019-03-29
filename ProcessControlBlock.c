@@ -143,6 +143,8 @@ void initializeProcessesHelper( PCB* processControlBlock, int processID,
 
           currentProcess->startCode = runningOpCode;
           }
+
+        runningOpCode->masterProcess = processNumber - 1;
         break;
 
       // Check if the opCode is processing
@@ -493,11 +495,15 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
   OpCodeType* currOpCode = currProc->currCode;
 
   // Check if the current opCode is not the ending of the process
-  if( compareString( currOpCode->opName, "end") != STR_EQ)
+  if( compareString( currOpCode->opName, "end") != STR_EQ )
     {
 
     // Check if the opcode is a memory unit
+    if( currOpCode->opLtr == 'M' )
+      {
 
+      allocateMemory( mmu, currOpCode );
+      }
 
     // otherwise, act as any other opCode
 

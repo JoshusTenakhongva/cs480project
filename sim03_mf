@@ -3,8 +3,8 @@ DEBUG = -g
 CFLAGS = -Wall -std=c99 -pedantic -c $(DEBUG)
 LFLAGS = -Wall -std=c99 -pedantic $(DEBUG)
 
-sim03: Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o
-	$(CC) $(LFLAGS) Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o -o sim03
+sim03: Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o MemoryManagement.o
+	$(CC) $(LFLAGS) Sim03Main.o MetaDataAccess.o ConfigAccess.o StringUtils.o ProcessControlBlock.o simtimer.o MemoryManagement.o -o sim03 -lm
 
 Sim03Main.o: Sim03Main.c
 	$(CC) $(CFLAGS) Sim03Main.c -lpthread
@@ -23,6 +23,9 @@ ProcessControlBlock.o: ProcessControlBlock.c ProcessControlBlock.h
 
 simtimer.o: simtimer.c simtimer.h
 	$(CC) $(CFLAGS) simtimer.c
+
+MemoryManagement.o: MemoryManagement.c MemoryManagement.h 
+	$(CC) $(CFLAGS) MemoryManagement.c 
 
 clean: 
 	\rm *.o *.*- sim03

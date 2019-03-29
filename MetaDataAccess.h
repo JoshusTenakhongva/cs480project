@@ -33,6 +33,8 @@ typedef struct OpCodeType
 	int opValue;
 	int runTime;
 	
+	int masterProcess; 
+	
 	struct OpCodeType* next;
 	
 	} OpCodeType;
