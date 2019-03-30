@@ -94,7 +94,7 @@ Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode )
 
   /* Initialize variables */
   // Create a memory address for the opCode
-  Memory_address* opCodeAddress = createMemoryAddress( opCode );
+  //Memory_address* opCodeAddress = createMemoryAddress( opCode );
 
   return False;
 
@@ -117,6 +117,29 @@ Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode )
 void clearMemoryAddress( Memory_address* address )
   {
 
-  //
+  /* Initailize variables */
+  Memory_address* nextAddress;
 
+  // Check if the address is not null
+  if( address != NULL )
+    {
+
+    // Save the next address
+    nextAddress = address->next;
+
+    // Clear this address
+    free( address );
+
+    // recurse to the next address
+    clearMemoryAddress( nextAddress );
+    }
+
+  }
+
+void clearMemory( Memory_management_unit* mmu )
+  {
+
+  clearMemoryAddress( mmu->head );
+
+  free( mmu );
   }

@@ -332,6 +332,9 @@ void sortProcesses( PCB* processControlBlock )
     }
   /* end Outer loop */
 
+  // Free the unsorted processes
+  clearProcessNodes( processControlBlock->processQueueHead );
+
   // Save the head and program counter of the sorted list to the PCB
   processControlBlock->processQueueHead = sortedListHead;
   processControlBlock->programCounter = sortedListHead->next;
@@ -1129,14 +1132,23 @@ void saveToFileHelper( String_node* runningNode, FILE* filePointer )
 void clearOutputList( String_node* runningNode )
   {
 
+  /* initialize variables */
+  String_node* nextNode;
+
 	// Check if the runningNode is not null
+  if( runningNode != NULL )
+    {
 
 		// Save the address of the next node
+    nextNode = runningNode->next;
 
 		// Free the runningNode
      // function: free
+    free( runningNode );
 
-		// freeOutputList( nextNode )
+		// clearOutputList( nextNode )
+    clearOutputList( nextNode );
+    }
   }
 
 void clearProcessNodes( Process_node* runningNode )

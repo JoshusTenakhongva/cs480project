@@ -282,6 +282,8 @@ int main( int argc, char** argv )
      // function: clearConfigData
     clearConfigData( &configDataPtr );
 
+    clearMemory( mmu );
+
     }
 
   // add endline for vertical spacing

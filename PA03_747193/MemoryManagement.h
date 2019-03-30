@@ -40,6 +40,8 @@ Boolean checkAccess();
 Memory_address* createMemoryAddress( OpCodeType* opCode ); 
 Memory_address* memoryAddressSearch( Memory_management_unit* mmu,
                                               Memory_address* addressSearch ); 
-Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address ); 	 
+Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address ); 
+void clearMemoryAddress( Memory_address* address ); 
+void clearMemory( Memory_management_unit* mmu ); 
 
 #endif //MM_H
