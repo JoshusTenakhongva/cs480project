@@ -10,6 +10,8 @@
 // global constants
 #define REMOVE_KB 1000
 #define REMOVE_MB 1000
+#define ALLOCATE True
+#define ACCESS False
 
 typedef struct Memory_address
   {
@@ -33,13 +35,15 @@ typedef struct Memory_management_unit
   } Memory_management_unit;
 
 /* functions */ 
+Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address,
+                                                      Boolean operationFlag );
 Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode ); 
 void separateMemoryAddress( Memory_address* memoryUnit, OpCodeType* opCode );
 void stringifyMemoryAddress( Memory_address* memoryAddress, char* string );
 Boolean checkAccess(); 
 Memory_address* createMemoryAddress( OpCodeType* opCode ); 
-Memory_address* memoryAddressSearch( Memory_management_unit* mmu,
-                                              Memory_address* addressSearch ); 
+Memory_address* memoryAddressSearch( Memory_address* runningNode,
+                                               Memory_address* addressSearch );
 Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address ); 
 void clearMemoryAddress( Memory_address* address ); 
 void clearMemory( Memory_management_unit* mmu ); 

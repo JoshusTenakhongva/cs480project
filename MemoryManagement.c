@@ -19,21 +19,65 @@
 *     clearMMU
 */
 
-Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address )
+Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address,
+                                                      Boolean operationFlag )
   {
 
   /* initialize variables */
-  return True;
+  Memory_address* addressFound;
+
+  // Search through the memoryAddresses to see if we find a match
+  addressFound = memoryAddressSearch( mmu->head, address );
+
+  // Check if the operation is allocating
+  if( operationFlag == ALLOCATE )
+    {
+
+
+    }
+  else
+    {
+
+
+    }
 
   }
 
-Memory_address* memoryAddressSearch( Memory_management_unit* mmu,
+Memory_address* memoryAddressSearch( Memory_address* runningNode,
                                                Memory_address* addressSearch )
   {
 
-  return NULL;
+  // Check if the runningNode is the last node or if there were never nodes
+  if( runningNode == NULL )
+    {
+
+    return NULL;
+    }
+
+  // Check if the runningNode's base is equal to the address search
+  if( runningNode->memoryBase == addressSearch->memoryBase )
+    {
+
+    // Return this address
+    return runningNode;
+    }
+
+  // Otherwise, return the incremented recusion
+  return memoryAddressSearch( runningNode->next, addressSearch );
   }
 
+/*
+* Desc:
+*     Creates a memory address based on the information from the opCode input.
+*     This address is not added to the MMU yet. It is just created.
+
+* Input:
+*     @opCode - The opCode from which we will create a memory address from
+
+* Postcondition:
+*     @return - We will return a memory address with the information from the
+*       opCode;
+*/
 Memory_address* createMemoryAddress( OpCodeType* opCode )
   {
 
@@ -61,10 +105,21 @@ Memory_address* createMemoryAddress( OpCodeType* opCode )
   return memoryUnit;
   }
 
-Boolean checkAccess()
+Boolean checkAccess( Memory_address* memoryAddress, OpCodeType* opCode )
   {
 
-  return False;
+  return memoryAddress->processWithAccess == opCode->masterProcess;
+
+  /* initialize variables */
+  //Boolean addressTaken;
+
+  // Create a temoprary memory address for the opCode
+
+  // Loop through the memory addresses
+
+  // Check if any share a base
+
+    // If so, check if the opCode address offset is greater than the
   }
 
 void stringifyMemoryAddress( Memory_address* memoryAddress, char* string )
