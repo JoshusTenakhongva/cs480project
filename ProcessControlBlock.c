@@ -252,18 +252,13 @@ void sortProcesses( PCB* processControlBlock )
   {
 
   /* Initialize variables */
-  int outerCount, innerCount;
+  int outerCount;
 
   // Create a new head for our sorted list of processes
   Process_node* sortedListHead = NULL;
 
-  // Create a tempNode for sorting
   Process_node* tempNode;
 
-  // Create a process node to increment through the unsorted list of processes
-  Process_node* currPCBNode = processControlBlock->processQueueHead;
-
-  // Variable to hold the tail of the sorted processes list
   Process_node* currSortedNode;
 
   // Find the number of process in the PCB
@@ -273,40 +268,7 @@ void sortProcesses( PCB* processControlBlock )
   for( outerCount = 0; outerCount < numOfProcesses; outerCount++ )
     {
 
-    // Reset our tempNode at the beginning each loop
-    tempNode = NULL;
-
-    // Reset the unsorted process list node we are at
-    currPCBNode = processControlBlock->processQueueHead;
-
-    // Loop through the processes
-    for( innerCount = 0; innerCount < numOfProcesses; innerCount++ )
-      {
-
-      // Check if the tempNode is null and if this process is viable
-      if( tempNode == NULL && currPCBNode->state != READY )
-        {
-
-        // If so, assign it ot the tempNode
-        tempNode = currPCBNode;
-        }
-
-      // else check if this node has a lowertimeRemaining than our tempNode
-      else if( tempNode != NULL && currPCBNode->state != READY)
-        {
-
-        if( currPCBNode->timeRemaining < tempNode->timeRemaining )
-          {
-
-          // If so, assign it to the temp node
-          tempNode = currPCBNode;
-          }
-        }
-
-      // increment the PCBNode
-      currPCBNode = currPCBNode->next;
-      }
-    /* end Inner loop */
+    tempNode = findShortestProcess( processControlBlock, READY );
 
     // Set the tempNode -therefore, the unsorted node- to ready
     tempNode->state = READY;
@@ -338,6 +300,53 @@ void sortProcesses( PCB* processControlBlock )
   // Save the head and program counter of the sorted list to the PCB
   processControlBlock->processQueueHead = sortedListHead;
   processControlBlock->programCounter = sortedListHead->next;
+  }
+
+Process_node* findShortestProcess( PCB* processControlBlock,
+                                                            int unwantedState )
+  {
+
+  // Start the search by using the first process as the default.
+  return findShortestHelper( processControlBlock->processQueueHead,
+                        processControlBlock->processQueueHead, unwantedState );
+
+  }
+
+Process_node* findShortestHelper( Process_node* runningNode,
+                              Process_node* shortestNode, int unwantedState )
+  {
+
+  // Check if the runningNode is NULL
+  if( runningNode == NULL )
+    {
+
+    return shortestNode;
+    }
+
+  // Check if the shortestNode is already in the unwantedState
+  if( shortestNode->state == unwantedState )
+    {
+
+    return findShortestHelper( runningNode->next, runningNode->next,
+                                                              unwantedState );
+    }
+
+  // Check if the runningNode runtime is shorter than the shortedNode's
+  else if( runningNode->timeRemaining < shortestNode->timeRemaining &&
+      runningNode->state != unwantedState )
+    {
+
+    // If so, recurse with the running node as the shortestNode
+    return findShortestHelper( runningNode->next, runningNode, unwantedState );
+    }
+
+  else
+    {
+
+    // Otherwise, assume the running node is not shorter and recurse
+    return findShortestHelper( runningNode->next, shortestNode, unwantedState );
+    }
+
   }
 
 int getProcessCount( PCB* processControlBlock )
@@ -495,7 +504,12 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
                                 int outputCode, Memory_management_unit* mmu )
   {
 
+  /* Initialize variables */
+  // Save the current opcode of the recursion
   OpCodeType* currOpCode = currProc->currCode;
+
+  // Declare a variable to hold the memory code indicating success/failure
+  int memoryCode = BEFORE_ACTION;
 
   // Check if the current opCode is not the ending of the process
   if( compareString( currOpCode->opName, "end") != STR_EQ )
@@ -505,22 +519,41 @@ void runOpCodes( Process_node* currProc, Output_list* outputList,
     if( currOpCode->opLtr == 'M' )
       {
 
-      allocateMemory( mmu, currOpCode );
+      // Print that the allocation or access is happening
+      memoryOutput( currProc, outputCode, outputList, memoryCode );
+
+      // Check if the memory operation is allocating
+      if( compareString( currOpCode->opName, "allocate" ) == STR_EQ )
+        {
+
+        memoryCode = allocateMemory( mmu, currOpCode );
+        }
+      else
+        {
+
+        memoryCode = ACCESS_FAIL;
+        }
+
+      // output the postcondition of the access or allocation
+      memoryOutput( currProc, outputCode, outputList, memoryCode );
       }
 
     // otherwise, act as any other opCode
+    else
+      {
 
-    // Print that this opCode has started
-     // function: outputProcess
-    outputProcess( currProc, outputCode, outputList );
+      // Print that this opCode has started
+       // function: outputProcess
+      nonMemoryOutput( currProc, outputCode, outputList );
 
-    // Spin the opCode
-     // function: spinOpCode
-    spinOpCode( currOpCode, currOpCode->runTime, currProc );
+      // Spin the opCode
+       // function: spinOpCode
+      spinOpCode( currOpCode, currOpCode->runTime, currProc );
 
-    // Print that the opCode has ended
-     // function: outputProcess
-    outputProcess( currProc, outputCode, outputList );
+      // Print that the opCode has ended
+       // function: outputProcess
+      nonMemoryOutput( currProc, outputCode, outputList );
+      }
 
     // Increment the process's currrent opCode to the next one
     incrementCurrentOpCode( currProc );
@@ -605,6 +638,13 @@ void incrementCurrentProcess( PCB* processControlBlock )
     }
 
   }
+
+
+
+
+
+
+
 
 /**************************************************************
 *   Output Methods
@@ -761,14 +801,11 @@ void outputOS( Process_node* process, Output_list* outputList, char string[],
 * Postcondition:
 *   Appropriate output will have been created to the monitor, file, or both.
 */
-void outputProcess( Process_node* process, int outputCode,
-																                      Output_list* outputList )
+void processOutputPrefix( Process_node* process, char* outputString )
   {
 
   // Initialize the variables
   char time[ MAX_STR_LEN ];
-  char outputString[ MAX_STR_LEN ] = "  ";
-  OpCodeType* currentOpCode = process->currCode;
 
   // Create a string for the beginning of the display line
   char processNumber[ MAX_STR_LEN ];
@@ -779,7 +816,6 @@ void outputProcess( Process_node* process, int outputCode,
   Parts must be added incrementally using concatenate string since we cannot
   just easily concatenate the entire string at once and put everything in it.
   */
-
   accessTimer( LAP_TIMER, time );
 
   // Create the string that holds the process and its number
@@ -794,7 +830,77 @@ void outputProcess( Process_node* process, int outputCode,
   // Because my SPACE constant doesn't want to work
   concatenateString( outputString, " " );
 
-  //printf( "opName: %s", currentOpCode->opName );
+  }
+
+void memoryOutput( Process_node* process, int outputCode,
+															         Output_list* outputList, int memCode )
+  {
+
+  /* initialize varaibles */
+  // Initialize the output string
+  char outputString[ MAX_STR_LEN ] = "  ";
+  // char tempString[ MAX_STR_LEN ];
+  char addressString[ MAX_STR_LEN ] = "";
+
+  Memory_address* opCodeAddress = createMemoryAddress( process->currCode );
+  stringifyMemoryAddress( opCodeAddress, addressString );
+  //printf( "%s\n", addressString );
+
+  processOutputPrefix( process, outputString );
+
+  concatenateString( outputString, " MMU " );
+
+  // Check the memCode to see what is printed
+  switch( memCode )
+    {
+
+    case BEFORE_ACTION:
+      concatenateString( outputString, "attempt to allocate " );
+      concatenateString( outputString, addressString );
+      break;
+    //
+    case ALLOCATE_SUCCESS:
+      concatenateString( outputString, "sucessful allocate" );
+      break;
+
+    case ALLOCATE_FAIL:
+      concatenateString( outputString, "failed to allocate" );
+      break;
+
+    default:
+      concatenateString( outputString, "access stuff" );
+
+    }
+
+  // display the string if the output code designates the monitor
+   // function: printf
+  if( checkOutputPrint( outputCode ) )
+    {
+
+    printf( "%s\n", outputString );
+    }
+
+  // save the output to our list if it can
+   // function: savetoOutputList
+  if( checkOutputFile( outputCode ) )
+    {
+
+    addOutputNode( outputList, outputString );
+
+    }
+  }
+
+void nonMemoryOutput( Process_node* process, int outputCode,
+																                     Output_list* outputList )
+  {
+
+  /* initialize varaibles */
+  // Initialize the output string
+  char outputString[ MAX_STR_LEN ] = "  ";
+
+  OpCodeType* currentOpCode = process->currCode;
+
+  processOutputPrefix( process, outputString );
 
   // Create the second half with the process number and opCode information
   concatenateString( outputString, currentOpCode->opName );
@@ -802,10 +908,6 @@ void outputProcess( Process_node* process, int outputCode,
   // Switch statement checking the opLetter
   switch( currentOpCode->opLtr )
     {
-
-    case 'M':
-      concatenateString( outputString, " memory operation " );
-      break;
 
     case 'P':
       concatenateString( outputString, " operation " );
@@ -818,7 +920,6 @@ void outputProcess( Process_node* process, int outputCode,
     case 'O':
       concatenateString( outputString, " output " );
       break;
-
     }
 
   // Check if the cycleTime is above 0
@@ -849,7 +950,6 @@ void outputProcess( Process_node* process, int outputCode,
 
     addOutputNode( outputList, outputString );
     }
-
   }
 
 /*

@@ -82,6 +82,9 @@ int main( int argc, char** argv )
     // Save the output code from the config file
     outputCode = configDataPtr->logToCode;
 
+    // Save the amount of memory available to the mmu
+    mmu->memAvailable = configDataPtr->memAvailable; 
+
     // Check if the program is writing to a file
     if( outputCode == LOGTO_FILE_CODE || outputCode == LOGTO_BOTH_CODE )
       {

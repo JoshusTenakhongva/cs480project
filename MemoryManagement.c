@@ -22,28 +22,59 @@
 Boolean checkSegfault( Memory_management_unit* mmu, Memory_address* address,
                                                       Boolean operationFlag )
   {
-
   /* initialize variables */
-  Memory_address* addressFound;
 
   // Search through the memoryAddresses to see if we find a match
-  addressFound = memoryAddressSearch( mmu->head, address );
+  Memory_address* searchedAddress = memoryAddressSearch( mmu, address );
 
   // Check if the operation is allocating
   if( operationFlag == ALLOCATE )
     {
 
-
+    // return segfault if the address was found
+    return searchedAddress != NOT_FOUND;
     }
-  else
+
+  // Otherwise, assume the operation is accessing
+  else // ( operationFlag == ACCESS )
     {
 
-
+    // return segfault true if the address was not found
+    return searchedAddress == NOT_FOUND;
     }
-
   }
 
-Memory_address* memoryAddressSearch( Memory_address* runningNode,
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
+Boolean checkMemoryAvailable( Memory_management_unit* mmu,
+                                                    Memory_address* allocMem )
+  {
+
+  return mmu->memAvailable >= allocMem->memoryOffset;
+  }
+
+
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
+Memory_address* memoryAddressSearch( Memory_management_unit* mmu,
+                                              Memory_address* addressSearch )
+  {
+
+  return memoryAddressSearchHelper( mmu->head, addressSearch );
+  }
+
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
+Memory_address* memoryAddressSearchHelper( Memory_address* runningNode,
                                                Memory_address* addressSearch )
   {
 
@@ -63,7 +94,7 @@ Memory_address* memoryAddressSearch( Memory_address* runningNode,
     }
 
   // Otherwise, return the incremented recusion
-  return memoryAddressSearch( runningNode->next, addressSearch );
+  return memoryAddressSearchHelper( runningNode->next, addressSearch );
   }
 
 /*
@@ -105,23 +136,23 @@ Memory_address* createMemoryAddress( OpCodeType* opCode )
   return memoryUnit;
   }
 
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
 Boolean checkAccess( Memory_address* memoryAddress, OpCodeType* opCode )
   {
 
   return memoryAddress->processWithAccess == opCode->masterProcess;
 
-  /* initialize variables */
-  //Boolean addressTaken;
-
-  // Create a temoprary memory address for the opCode
-
-  // Loop through the memory addresses
-
-  // Check if any share a base
-
-    // If so, check if the opCode address offset is greater than the
   }
 
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
 void stringifyMemoryAddress( Memory_address* memoryAddress, char* string )
   {
 
@@ -131,8 +162,11 @@ void stringifyMemoryAddress( Memory_address* memoryAddress, char* string )
   // Convert the memory ID to a string
   sprintf( tempString, "%d/", memoryAddress->memoryID );
 
+  //printf( "%s", tempString );
   // Add the string to the string we plan to print
   concatenateString( string, tempString );
+
+  printf( "%s", string );
 
   // Convert the memory base to a string
   sprintf( tempString, "%d/", memoryAddress->memoryBase );
@@ -144,31 +178,60 @@ void stringifyMemoryAddress( Memory_address* memoryAddress, char* string )
   concatenateString( string, tempString );
   }
 
-Boolean allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode )
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
+int allocateMemory( Memory_management_unit* mmu, OpCodeType* opCode )
   {
 
   /* Initialize variables */
   // Create a memory address for the opCode
-  //Memory_address* opCodeAddress = createMemoryAddress( opCode );
-
-  return False;
+  Memory_address* opCodeAddress = createMemoryAddress( opCode );
 
   /* Check if the memory allocation is valid */
   // Check if the allocation is possible with our memory size
+  if ( !checkMemoryAvailable( mmu, opCodeAddress ) )
+    {
+
+    return ALLOCATE_FAIL;
+    }
 
   // Check if the allocation segfaults
+  if( checkSegfault( mmu, opCodeAddress, ALLOCATE ) )
+    {
 
+    printf( "bitch segfaulted\n" );
+    return ALLOCATE_FAIL;
+    }
+
+  /* assume that we are free to continue allocating */
 
   // Check if the head of the MMU is null
+  if( mmu->head == NULL )
+    {
 
     // If so, set the current memory allocation as the head
-
+    mmu->head = opCodeAddress;
+    mmu->currentUnit = opCodeAddress;
+    }
   // Otherwise
+  else
+    {
 
     // Set the current allocation as the next in the list
+    mmu->currentUnit->next = opCodeAddress;
+    }
 
+  return ALLOCATE_SUCCESS;
   }
 
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
 void clearMemoryAddress( Memory_address* address )
   {
 
@@ -191,6 +254,11 @@ void clearMemoryAddress( Memory_address* address )
 
   }
 
+/*
+* Desc:
+* Input:
+* Postcondition:
+*/
 void clearMemory( Memory_management_unit* mmu )
   {
 

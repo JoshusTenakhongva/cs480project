@@ -69,6 +69,18 @@ void opCode_A_end( Process_node* currProcess, OpCodeType* opCode );
 void incrementCurrentOpCode( Process_node* process );
 void setProcessesToReady( Process_node* runningProcess );
 void sortProcesses( PCB* processControlBlock ); 
+
+
+
+Process_node* findShortestProcess( PCB* processControlBlock, 
+                                                          int unwantedState );
+Process_node* findShortestHelper( Process_node* runningNode,
+                              Process_node* shortestNode, int unwantedState );
+
+															
+															
+															
+															
 int getProcessCount( PCB* processControlBlock );
 Process_node* copyProcess( Process_node* sourceNode );
 void runProcesses( PCB* processControlBlock, Output_list* outputList,
@@ -83,8 +95,11 @@ void incrementCurrentProcess( PCB* ProcessControlBlock );
 // Output Methods 
 void outputOS( Process_node* process, Output_list* outputList, char string[],
                                                               int outputCode );
-void outputProcess( Process_node* process, int outputCode,
-																                     Output_list* outputList );
+void memoryOutput( Process_node* process, int outputCode,
+															         Output_list* outputList, int memCode );
+void nonMemoryOutput( Process_node* process, int outputCode,
+																                     Output_list* outputList );						
+void processOutputPrefix( Process_node* process, char* outputString ); 
 void initializeOutputList( Output_list* outputList,
 																							ConfigDataType* configDataPtr );
 Boolean checkOutputFile( int outputCode );
